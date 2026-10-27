@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Egypt House Price Predictor</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #172033;
+      background: #f3f6fb;
+    }
+
+    body {
+      margin: 0;
+      padding: 40px 16px;
+    }
+
+    main {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 12px 36px rgb(23 32 51 / 10%);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.8rem;
+    }
+
+    p {
+      margin: 0 0 24px;
+      color: #5d687b;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    button {
+      box-sizing: border-box;
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #ccd4e0;
+      border-radius: 8px;
+      background: #fff;
+      color: inherit;
+      font: inherit;
+    }
+
+    button {
+      grid-column: 1 / -1;
+      border: 0;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    #result {
+      margin: 20px 0 0;
+      font-weight: 600;
+    }
+
+    #result.error {
+      color: #b42318;
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 20px 12px;
+      }
+
+      main {
+        padding: 24px 18px;
+      }
+
+      form {
+        grid-template-columns: 1fr;
+      }
+
+      button {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Egypt House Price Predictor</h1>
+    <p>Enter the property details to estimate its price.</p>
+
+    <form id="prediction-form">
+      <label>
+        City
+        <select name="City" required>
+          {% for city in cities %}
+          <option value="{{ city }}">{{ city }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        Property type
+        <select name="PropertyType" required>
+          <option value="Apartment">Apartment</option>
+          <option value="Villa">Villa</option>
+        </select>
+      </label>
+
+      <label>
+        Area (m²)
+        <input name="Area" type="number" min="0" step="any" required>
+      </label>
+
+      <label>
+        Number of rooms
+        <input name="NumRooms" type="number" min="0" step="1" required>
+      </label>
+
+      <label>
+        Floor
+        <input name="Floor" type="number" min="0" step="1" required>
+      </label>
+
+      <label>
+        Building age (years)
+        <input name="BuildingAge" type="number" min="0" step="1" required>
+      </label>
+
+      <label>
+        View
+        <select name="View" required>
+          <option value="Street">Street</option>
+          <option value="Garden">Garden</option>
+        </select>
+      </label>
+
+      <label>
+        Elevator
+        <select name="HasElevator" required>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </label>
+
+      <button type="submit">Predict price</button>
+    </form>
+
+    <p id="result" role="status" aria-live="polite"></p>
+  </main>
+
+  <script>
+    const form = document.querySelector("#prediction-form");
+    const result = document.querySelector("#result");
+    const button = form.querySelector("button");
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      result.textContent = "Calculating...";
+      result.classList.remove("error");
+      button.disabled = true;
+
+      const formData = new FormData(form);
+      const data = Object.fromEntries(formData.entries());
+      for (const field of ["Area", "NumRooms", "Floor", "BuildingAge"]) {
+        data[field] = Number(data[field]);
+      }
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        const body = await response.json();
+        if (!response.ok) {
+          throw new Error(body.error || "Prediction failed. Please try again.");
+        }
+        result.textContent = `Estimated price: ${new Intl.NumberFormat().format(body.predicted_price)}`;
+      } catch (error) {
+        result.textContent = error.message || "Could not connect to the prediction service.";
+        result.classList.add("error");
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
