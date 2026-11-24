@@ -8,7 +8,7 @@ pip install -r requirements.txt
 then 
 
 ```bash
-python flask_test.py
+python app.py
 ```
 
 then open your browser and go to http://localhost:5000
