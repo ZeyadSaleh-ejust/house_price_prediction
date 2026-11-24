@@ -7,7 +7,7 @@ from helpers.helper import ohe, preprocess_input
 app = Flask(__name__)
 model = joblib.load("models/model.pkl")
 
-app.route('/')  # http://localhost:5000/   ||| when there is a request to the endpoint '/', the function index() will be executed
+@app.route('/')  # http://localhost:5000/   ||| when there is a request to the endpoint '/', the function index() will be executed
 def index():
     cities = ohe.categories_[0].tolist() # [Cairo, Alexandra, Giza, Mansoura]
     return render_template('index.html', cities=cities)
@@ -22,7 +22,4 @@ def predict():
 
 
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0',port=5000)# database port = 3000
-
-# 192.168.1.10  Ip address , host, port 
-http://192.168.1.10:5000
+    app.run(debug=True)  # run the flask app in debug mode
